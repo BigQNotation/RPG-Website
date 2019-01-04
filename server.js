@@ -8,14 +8,26 @@ const ObjectID = require('mongodb').ObjectID;
 const MONGO_URL = 'mongodb://localhost:27017/rpgdb';
 
 
-let db = null;
 
+
+// Connect to the User mongoDB
+let db = null;
 start_server();
   async function start_server(){
-
   db = await mongodb.connect(MONGO_URL);
   User =  db.collection('User');
 };
+
+
+// Cron-jobs
+var schedule = require('node-schedule');
+
+var j = schedule.scheduleJob('30 * * * * *', function(){
+  console.log('Scheduled tasks finished.');
+  User.update({health: {$lt: 500}}, {$set: {health: 500}}, { multi: true })
+});
+
+
 
 // Configure the local strategy for use by Passport.
 //
