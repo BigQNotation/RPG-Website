@@ -1,61 +1,113 @@
+var express = require('express');
+var passport = require('passport');
+var Strategy = require('passport-local').Strategy;
+//var db = require('./db');
 
-const express = require('express');
-const path = require('path');
-const bodyParser = require('body-parser');
 const mongodb = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
+const MONGO_URL = 'mongodb://localhost:27017/rpgdb';
 
-const MONGO_URL = 'mongodb://localhost:27017/mydb';
-
-const app = express();
-const jsonParser = bodyParser.json();
-
-app.use(express.static('public'));
 
 let db = null;
 
+start_server();
+  async function start_server(){
 
-var passport = require('passport')
-  , LocalStrategy = require('passport-local').Strategy;
-
-passport.use(new LocalStrategy(
-  function(username, password, done) {
-    User.findOne({ username: username }, function(err, user) {
-      if (err) { return done(err); }
-      if (!user) {
-        return done(null, false, { message: 'Incorrect username.' });
-      }
-      if (!user.validPassword(password)) {
-        return done(null, false, { message: 'Incorrect password.' });
-      }
-      return done(null, user);
-    });
-  }
-));
-
-
-
-
-
-async function startDbAndServer() {
-
-  app.listen(3000, function () {
-    console.log('Server listening on port 3000');
-
-  });
-
-  db = await mongodb.connect(MONGO_URL, { useNewUrlParser: true }) ;
-    console.log("MongoDB connection established");
-    collection = db.collection('classes1');
+  db = await mongodb.connect(MONGO_URL);
+  User =  db.collection('User');
 };
 
-startDbAndServer();
+// Configure the local strategy for use by Passport.
+//
+// The local strategy require a `verify` function which receives the credentials
+// (`username` and `password`) submitted by the user.  The function must verify
+// that the password is correct and then invoke `cb` with a user object, which
+// will be set at `req.user` in route handlers after authentication.
+
+
+  passport.use(new Strategy(
+    function(username, password, cb) {
+      User.findOne({ username: username }, function (err, user) {
+        if (err) { return cb(err); }
+        if (!user) {
+          return cb(null, false, { message: 'Incorrect username.' });
+        }
+        if (!(user.password === password)) {
+          return cb(null, false, { message: 'Incorrect password.' });
+        }
+        return cb(null, user);
+      });
+    }
+  ));
 
 
 
-async function onGetClassView(req, res) {
-  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
-}
+// Configure Passport authenticated session persistence.
+//
+// In order to restore authentication state across HTTP requests, Passport needs
+// to serialize users into and deserialize users out of the session.  The
+// typical implementation of this is as simple as supplying the user ID when
+// serializing, and querying the user record by ID from the database when
+// deserializing.
+passport.serializeUser(function(user, cb) {
+  cb(null, user.id);
+});
+
+passport.deserializeUser(function(id, cb) {
+  User.findOne({id: id}, function (err, user) {
+    if (err) { return cb(err); }
+    cb(null, user);
+  });
+});
 
 
-app.get('/', onGetClassView);
+
+
+// Create a new Express application.
+var app = express();
+
+// Configure view engine to render EJS templates.
+app.set('views', __dirname + '/views');
+app.set('view engine', 'ejs');
+
+// Use application-level middleware for common functionality, including
+// logging, parsing, and session handling.
+app.use(require('morgan')('combined'));
+app.use(require('cookie-parser')());
+app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+
+// Initialize Passport and restore authentication state, if any, from the
+// session.
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Define routes.
+app.get('/',
+  function(req, res) {
+    res.render('home', { user: req.user });
+  });
+
+app.get('/login',
+  function(req, res){
+    res.render('login');
+  });
+
+app.post('/login',
+  passport.authenticate('local', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
+
+app.get('/logout',
+  function(req, res){
+    req.logout();
+    res.redirect('/');
+  });
+
+app.get('/profile',
+  require('connect-ensure-login').ensureLoggedIn(),
+  function(req, res){
+    res.render('profile', { user: req.user });
+  });
+app.listen(3000);
