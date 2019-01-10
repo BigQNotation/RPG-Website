@@ -1,0 +1,12 @@
+<p>
+Health: <%= user.health %><br/>
+Fatigue: <%= user.fatigue %><br/>
+Mining: <%= user.mining_level %><br/>
+</p>
+<a href="/logout">Log out</a>
+<form action="/mines" method="post">
+	<div>
+	<label>Mine</label>
+	<input type="submit" value="Mine"/><br/>
+	</div>
+</form>
