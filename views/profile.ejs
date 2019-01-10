@@ -1,10 +1,12 @@
 <p>
 ID: <%= user.id %><br/>
 Username: <%= user.username %><br/>
-Name: <%= user.displayName %><br/>
 Health: <%= user.health %><br/>
-<% if (user.emails) { %>
-Email: <%= user.emails[0].value %><br/>
-<% } %>
+Fatigue: <%= user.fatigue %><br/>
+Mining: <%= user.mining_level %><br/>
+
+
+
+
 </p>
 <a href="/logout">Log out</a>
