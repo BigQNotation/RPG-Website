@@ -2,6 +2,7 @@ var express = require('express');
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 //var db = require('./db');
+var path = require('path')
 
 const mongodb = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
@@ -89,6 +90,7 @@ app.use(require('morgan')('combined'));
 app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(require('express-session')({ secret: 'keyboard cat', resave: false, saveUninitialized: false }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize Passport and restore authentication state, if any, from the
 // session.
