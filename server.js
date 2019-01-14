@@ -25,8 +25,26 @@ var schedule = require('node-schedule');
 
 var j = schedule.scheduleJob('30 * * * * *', function(){
   console.log('Scheduled tasks finished.');
-  User.update({health: {$lt: 500}}, {$set: {health: 500}}, { multi: true });
-  User.update({stamina: {$lt: 5}}, {$set: {stamina: 5}}, { multi: true });
+
+  User.find().snapshot().forEach(
+    function (e) {
+      // Update user's depletables
+      if(e.stamina < 5){
+        e.stamina = e.stamina+1;
+      }
+      if(e.health < 500){
+        e.health = e.health + 100;
+      }
+      // Upper limit check
+      if(e.health > 500){
+        e.health = 500;
+      }
+      User.save(e);
+    }
+  )
+
+
+
 });
 
 
