@@ -26,7 +26,7 @@ var schedule = require('node-schedule');
 var j = schedule.scheduleJob('30 * * * * *', function(){
   console.log('Scheduled tasks finished.');
   User.update({health: {$lt: 500}}, {$set: {health: 500}}, { multi: true });
-  User.update({fatigue: {$lt: 5}}, {$set: {fatigue: 5}}, { multi: true });
+  User.update({stamina: {$lt: 5}}, {$set: {stamina: 5}}, { multi: true });
 });
 
 
@@ -136,10 +136,10 @@ app.get('/mines',
 app.post('/mines',
   require('connect-ensure-login').ensureLoggedIn(),
   function(req, res) {
-  if (req.user.fatigue > 0){
-    var new_fatigue = req.user.fatigue - 1;
+  if (req.user.stamina > 0){
+    var new_stamina = req.user.stamina - 1;
     var new_mining_level = req.user.mining_level + 1;
-    User.update({_id: req.user._id}, {$set: {fatigue: new_fatigue, mining_level: new_mining_level }})
+    User.update({_id: req.user._id}, {$set: {stamina: new_stamina, mining_level: new_mining_level }})
   }
   res.redirect('/mines');
   });
