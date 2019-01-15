@@ -147,19 +147,38 @@ app.get('/profile',
 app.get('/mines',
   require('connect-ensure-login').ensureLoggedIn(),
   function(req, res){
-    res.render('mines', { user: req.user });
+    res.render('mines', { user: req.user, message:"You enter the mine",loot:""});
   });
 
 
 app.post('/mines',
   require('connect-ensure-login').ensureLoggedIn(),
   function(req, res) {
+  // if the user has enough stamina, user mines.
   if (req.user.stamina > 0){
     var new_stamina = req.user.stamina - 1;
     var new_mining_level = req.user.mining_level + 1;
-    User.update({_id: req.user._id}, {$set: {stamina: new_stamina, mining_level: new_mining_level }})
+    User.update({_id: req.user._id}, {$set: {stamina: new_stamina, mining_level: new_mining_level }});
+
+    var loot_chance = Math.floor((Math.random() * 10) + 1);
+    console.log(loot_chance);
+    var loot_result = "";
+    if (loot_chance >7){
+      loot_result = "You obtain some copper ore.";
+    }
+    res.render('mines', {user: req.user, message: "Metals collide; Your skills in mining advance.", loot: loot_result});
   }
-  res.redirect('/mines');
+  else {
+    // if the user doesn't have the necessary stamina, they take damage
+    // and receieve no mining benefits.
+    new_health = req.user.health - 100;
+    if(new_health < 1){
+      new_health = 1;
+    }
+    User.update({_id: req.user._id}, {$set: {health: new_health}});
+    res.render('mines', {user: req.user, message: "Your impatience takes its toll.", loot: ""});
+  }
+
   });
 
 app.listen(3000);

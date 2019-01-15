@@ -22,11 +22,14 @@
 Health: <%= user.health %><br/>
 Stamina: <%= user.stamina %><br/>
 Mining: <%= user.mining_level %><br/>
+
+
 </p>
 
 <form action="/mines" method="post">
 	<div>
-	<label>You enter the mine</label><br/>
+	<label><%= message %></label><br/>
+	<label><%= loot %></label><br/>
 	<input type="submit" value="Mine"/><br/>
 	</div>
 </form>
