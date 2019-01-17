@@ -144,6 +144,12 @@ app.get('/profile',
     res.render('profile', { user: req.user });
   });
 
+  app.get('/inventory',
+    require('connect-ensure-login').ensureLoggedIn(),
+    function(req, res){
+      res.render('inventory', { user: req.user });
+    });
+
 app.get('/mines',
   require('connect-ensure-login').ensureLoggedIn(),
   function(req, res){
@@ -156,15 +162,14 @@ app.post('/mines',
   function(req, res) {
   // if the user has enough stamina, user mines.
   if (req.user.stamina > 0){
-    var new_stamina = req.user.stamina - 1;
-    var new_mining_level = req.user.mining_level + 1;
-    User.update({_id: req.user._id}, {$set: {stamina: new_stamina, mining_level: new_mining_level }});
+    User.update({_id: req.user._id}, {$inc: {stamina: -1, mining_level: 1 }});
 
     var loot_chance = Math.floor((Math.random() * 10) + 1);
     console.log(loot_chance);
     var loot_result = "";
     if (loot_chance >7){
       loot_result = "You obtain some copper ore.";
+      User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper": 1}});
     }
     res.render('mines', {user: req.user, message: "Metals collide; Your skills in mining advance.", loot: loot_result});
   }
