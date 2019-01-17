@@ -167,7 +167,7 @@ app.post('/mines',
   // if the user has enough stamina, user mines.
   // possibly receives mined ore loot.
   if (req.user.stamina > 0){
-    User.update({_id: req.user._id}, {$inc: {stamina: -1, mining_level: 1 }});
+    await User.update({_id: req.user._id}, {$inc: {stamina: -1, mining_level: 1 }});
 
     // Roll for mined ore loot
     var loot_chance = Math.floor((Math.random() * 10) + 1);
@@ -186,14 +186,16 @@ app.post('/mines',
 
       // give user the mined ore loot
       if (loot_name == "copper"){
-        User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper": 1}});
+        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper": 1}});
       }
       if (loot_name == "tin"){
-        User.update({_id: req.user._id}, {$inc: {"inventory.ore.tin": 1}});
+        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.tin": 1}});
       }
       var loot_user_message = "You pocket some " + loot_name + ".";
     }
-    res.render('mines', {user: req.user, message: "Metals collide; Your skills in mining advance.", loot: loot_user_message});
+
+    var user = await User.findOne({_id: req.user._id});
+    res.render('mines', {user: user, message: "Metals collide; Your skills in mining advance.", loot: loot_user_message});
   }
   else {
     // if the user doesn't have the necessary stamina, they take damage
@@ -202,8 +204,9 @@ app.post('/mines',
     if(new_health < 1){
       new_health = 1;
     }
-    User.update({_id: req.user._id}, {$set: {health: new_health}});
-    res.render('mines', {user: req.user, message: "Fatigue takes over your body.", loot: ""});
+    await User.update({_id: req.user._id}, {$set: {health: new_health}});
+    var user = await User.findOne({_id: req.user._id});
+    res.render('mines', {user: user, message: "Fatigue takes over your body.", loot: ""});
   }
 
 });
