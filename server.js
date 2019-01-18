@@ -95,9 +95,6 @@ passport.deserializeUser(function(id, cb) {
   });
 });
 
-
-
-
 // Create a new Express application.
 var app = express();
 
@@ -171,7 +168,7 @@ app.post('/mines',
 
     // Roll for mined ore loot
     var loot_chance = Math.floor((Math.random() * 10) + 1);
-    if (loot_chance > 5){
+    if (loot_chance > 3){
 
       // get player location
       var user = await User.findOne({_id: req.user._id});
@@ -184,19 +181,49 @@ app.post('/mines',
       var loot_index = getRandomInt(locations_loot.ore.length);
       var loot_name = locations_loot.ore[loot_index];
 
-      // calculate total ore mined and give it to user
+      // get pickaxe strength, used to compare against ore type
+      // get a loot count modifier from mining level
+      var equipped_pickaxe = user.inventory.pickaxe.using;
+      var users_pickaxe_strength = user.inventory.pickaxe.all_picks[equipped_pickaxe].value;
       var ore_count_modifier = Math.ceil(user.mining_level / 100);
-      if (loot_name == "copper"){
-        var ore_rarity = 4;
-        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity);
+      var loot_user_message = "";
+
+      // calculate&give ore loot to user if they pass the tests
+      // copper
+      if (loot_name == "copper" && (users_pickaxe_strength > 0)){
+        var ore_rarity = 6;
+        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity) + 1;
         await User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper": looted_ore}});
+        loot_user_message = "Metals collide; You pocket " + looted_ore + " " +  loot_name + ".";
       }
-      if (loot_name == "tin"){
-        var ore_rarity = 3;
-        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity);
+      // tin
+      else if (loot_name == "tin" && (users_pickaxe_strength > 1)){
+        var ore_rarity = 6;
+        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity) + 1;
         await User.update({_id: req.user._id}, {$inc: {"inventory.ore.tin": looted_ore}});
+        loot_user_message = "Metals collide; You pocket " + looted_ore + " " +  loot_name + ".";
       }
-      var loot_user_message = "Metals collide; You pocket " + looted_ore + " " +  loot_name + ".";
+      // silver
+      else if (loot_name == "silver" && (users_pickaxe_strength > 2)){
+        var ore_rarity = 3;
+        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity) + 1;
+        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.silver": looted_ore}});
+        loot_user_message = "Metals collide; You pocket " + looted_ore + " " +  loot_name + ".";
+      }
+      // gold
+      else if (loot_name == "gold" && (users_pickaxe_strength > 2)){
+        var ore_rarity = 2;
+        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity) + 1;
+        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.gold": looted_ore}});
+        loot_user_message = "Metals collide; You pocket " + looted_ore + " " +  loot_name + ".";
+      }
+      // insufficient pickaxe strength for ore type
+      else {
+        loot_user_message = "Your pick hits " + loot_name + " but is too weak to break any away.";
+      }
+    }
+    else {
+      loot_user_message = "You are unable to mine anything of value.";
     }
 
     var user = await User.findOne({_id: req.user._id});
