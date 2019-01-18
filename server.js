@@ -171,7 +171,7 @@ app.post('/mines',
 
     // Roll for mined ore loot
     var loot_chance = Math.floor((Math.random() * 10) + 1);
-    if (loot_chance > 7){
+    if (loot_chance > 5){
 
       // get player location
       var user = await User.findOne({_id: req.user._id});
@@ -184,18 +184,23 @@ app.post('/mines',
       var loot_index = getRandomInt(locations_loot.ore.length);
       var loot_name = locations_loot.ore[loot_index];
 
-      // give user the mined ore loot
+      // calculate total ore mined and give it to user
+      var ore_count_modifier = Math.ceil(user.mining_level / 100);
       if (loot_name == "copper"){
-        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper": 1}});
+        var ore_rarity = 4;
+        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity);
+        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper": looted_ore}});
       }
       if (loot_name == "tin"){
-        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.tin": 1}});
+        var ore_rarity = 3;
+        var looted_ore = ore_count_modifier*getRandomInt(ore_rarity);
+        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.tin": looted_ore}});
       }
-      var loot_user_message = "You pocket some " + loot_name + ".";
+      var loot_user_message = "Metals collide; You pocket " + looted_ore + " " +  loot_name + ".";
     }
 
     var user = await User.findOne({_id: req.user._id});
-    res.render('mines', {user: user, message: "Metals collide; Your skills in mining advance.", loot: loot_user_message});
+    res.render('mines', {user: user, message: "Your skills in mining advance.", loot: loot_user_message});
   }
   else {
     // if the user doesn't have the necessary stamina, they take damage
