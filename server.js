@@ -26,7 +26,7 @@ start_server();
 // Cron-jobs
 var schedule = require('node-schedule');
 
-var j = schedule.scheduleJob('30 * * * * *', function(){
+var j = schedule.scheduleJob('01 * * * * *', function(){
   console.log('Scheduled tasks finished.');
 
   User.find().snapshot().forEach(
@@ -138,10 +138,21 @@ app.get('/logout',
     res.redirect('/');
   });
 
-app.get('/profile',
+
+app.get('/profile/',
   require('connect-ensure-login').ensureLoggedIn(),
-  function(req, res){
-    res.render('profile', { user: req.user });
+  async function(req, res){
+    res.render('profile', {user: req.user, shown_user: req.user});
+  });
+
+
+app.get('/profile/:userID',
+  require('connect-ensure-login').ensureLoggedIn(),
+  async function(req, res){
+    var showuser = await User.findOne({id: Number(req.params.userID)});
+    console.log("userId: " + req.params.userID);
+    //console.log("showuser.health" + showuser.health);
+    res.render('profile', { user: req.user, shown_user: showuser });
   });
 
   app.get('/inventory',
@@ -193,7 +204,7 @@ app.post('/mines',
       if (loot_name == "copper" && (users_pickaxe_strength > 0)){
         var ore_rarity = 6;
         var looted_ore = ore_count_modifier*getRandomInt(ore_rarity) + 1;
-        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper": looted_ore}});
+        await User.update({_id: req.user._id}, {$inc: {"inventory.ore.copper":looted_ore} });
         loot_user_message = "Metals collide; You pocket " + looted_ore + " " +  loot_name + ".";
       }
       // tin
