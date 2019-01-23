@@ -21,21 +21,12 @@
 
 <div class="main">
 <p>
-Health: <%= user.health %><br/>
-Stamina: <%= user.stamina %><br/>
-Mining: <%= user.mining_level %><br/>
+Pickaxes: <%= store.inventory[0].item %><br/>
 </p>
 
-<form action="/mines" method="post">
+<form action="/store" method="post">
 	<div>
-	<label><%= loot %></label><br/>
-	<label><%= message %></label><br/>
-	<input type="submit" value="Mine"/><br/>
+	<input type="submit" value="Store"/><br/>
 	</div>
 </form>
 </div>
-
-
-
-</body>
-</html>

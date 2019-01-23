@@ -20,6 +20,7 @@ start_server();
   db = await mongodb.connect(MONGO_URL);
   User =  db.collection('User');
   Location = db.collection('Location');
+  Store = db.collection('Store');
 };
 
 
@@ -155,16 +156,26 @@ app.get('/profile/:userID',
     res.render('profile', { user: req.user, shown_user: showuser });
   });
 
-  app.get('/inventory',
-    require('connect-ensure-login').ensureLoggedIn(),
-    function(req, res){
-      res.render('inventory', { user: req.user });
-    });
+app.get('/inventory',
+  require('connect-ensure-login').ensureLoggedIn(),
+  function(req, res){
+    res.render('inventory', { user: req.user });
+  });
+
 
 app.get('/mines',
   require('connect-ensure-login').ensureLoggedIn(),
   function(req, res){
     res.render('mines', { user: req.user, message:"You enter the mine",loot:""});
+  });
+
+app.get('/store',
+  require('connect-ensure-login').ensureLoggedIn(),
+  async function(req, res){
+    console.log(req.user.location.name);
+    var location_store = await Store.findOne({name: req.user.location.name});
+    console.log("location_store[0].item: " + location_store.inventory[0].item);
+    res.render('store', { user: req.user, store: location_store });
   });
 
 
