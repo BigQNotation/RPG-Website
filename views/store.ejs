@@ -20,13 +20,18 @@
 </div>
 
 <div class="main">
-<p>
-Pickaxes: <%= store.inventory[0].item %><br/>
-</p>
 
 <form action="/store" method="post">
-	<div>
-	<input type="submit" value="Store"/><br/>
+	<div id="buy_item_buttons">
 	</div>
 </form>
 </div>
+
+<script>
+	<% for (var i = 0; i < store.inventory.length; i++) { %>
+		document.getElementById("buy_item_buttons").innerHTML += "<%= store.inventory[i].item %> " + "<%= store.inventory[i].cost %>gp " +
+		                        "<button name='purchase' value='" + "<%= store.inventory[i].item %>"  + "'>Buy</button></br>";
+	<% } %>
+</script>
+
+</body>

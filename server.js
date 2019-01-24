@@ -162,22 +162,29 @@ app.get('/inventory',
     res.render('inventory', { user: req.user });
   });
 
-
-app.get('/mines',
-  require('connect-ensure-login').ensureLoggedIn(),
-  function(req, res){
-    res.render('mines', { user: req.user, message:"You enter the mine",loot:""});
-  });
-
 app.get('/store',
   require('connect-ensure-login').ensureLoggedIn(),
   async function(req, res){
-    console.log(req.user.location.name);
+
+    // create an array of items for sale and their costs
+    var user= await User.findOne({_id: req.user._id});
+    var items_for_sale = await Store.findOne({name: user.location.name});
+
+    res.render('store', { user: req.user, store: items_for_sale });
+  });
+
+app.post('/store',
+  require('connect-ensure-login').ensureLoggedIn(),
+  async function(req, res){
     var location_store = await Store.findOne({name: req.user.location.name});
-    console.log("location_store[0].item: " + location_store.inventory[0].item);
     res.render('store', { user: req.user, store: location_store });
   });
 
+app.get('/mines',
+  require('connect-ensure-login').ensureLoggedIn(),
+  async function(req, res){
+    res.render('mines', { user: req.user, message:"You enter the mine",loot:""});
+  });
 
 app.post('/mines',
   require('connect-ensure-login').ensureLoggedIn(),
