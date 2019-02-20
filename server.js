@@ -167,17 +167,43 @@ app.get('/store',
   async function(req, res){
 
     // create an array of items for sale and their costs
-    var user= await User.findOne({_id: req.user._id});
+    var user = await User.findOne({_id: req.user._id});
     var items_for_sale = await Store.findOne({name: user.location.name});
 
-    res.render('store', { user: req.user, store: items_for_sale });
+    res.render('store', { user: req.user, store: items_for_sale, purchase_message: "" });
   });
 
 app.post('/store',
   require('connect-ensure-login').ensureLoggedIn(),
   async function(req, res){
-    var location_store = await Store.findOne({name: req.user.location.name});
-    res.render('store', { user: req.user, store: location_store });
+
+    // create an array of items for sale and their costs
+    var user = await User.findOne({_id: req.user._id});
+    var items_for_sale = await Store.findOne({name: user.location.name});
+
+    var item_to_purchase = await Store.findOne({'inventory.item': req.body.purchase}, {'inventory.$': 1})
+
+    if (user.coins >= item_to_purchase.inventory[0].cost){
+      user_balance = user.coins - item_to_purchase.inventory[0].cost;
+      await User.update({_id: req.user._id}, {$set: {coins: user_balance}});
+
+      if (item_to_purchase.inventory[0].type == "pickaxe"){
+        // find if user already has this pickaxe
+        user_pick = await User.findOne({_id: req.user._id, 'inventory.pickaxe.all_picks.name': req.body.purchase}, {'$inventory.pickaxe.all_picks':1})
+        console.log(user_pick);
+        if (user_pick == null){
+          await User.update({_id: req.user._id}, {$push:{'inventory.pickaxe.all_picks': {name: item_to_purchase.inventory[0].item}}} )
+        }
+      }
+
+      purchase_message = "You purchase the " + req.body.purchase + ".";
+    }
+    else {
+      purchase_message = "You lack the funds to purchase a " + req.body.purchase + ".";
+    }
+    console.log(req.body.purchase);
+
+    res.render('store', { user: req.user, store: items_for_sale, purchase_message: purchase_message });
   });
 
 app.get('/mines',
